@@ -1,13 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import {
-  Ban,
-  Pencil,
-  Plus,
-  RefreshCw,
-  Search,
-} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Ban, Eye, Pencil, Plus, RefreshCw, Search } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -50,6 +45,7 @@ interface EventsPanelProps {
 }
 
 export function EventsPanel({ onUnauthorized }: EventsPanelProps) {
+  const router = useRouter();
   const [events, setEvents] = useState<Event[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
@@ -283,6 +279,16 @@ export function EventsPanel({ onUnauthorized }: EventsPanelProps) {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            router.push(`/admin/eventos/${event.id}`)
+                          }
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          Detalhes
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"

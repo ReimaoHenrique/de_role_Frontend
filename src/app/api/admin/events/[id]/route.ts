@@ -4,6 +4,16 @@ import type { Event } from "@/types";
 
 export const dynamic = "force-dynamic";
 
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+  return adminProxy<Event>(request, `/api/admin/events/${encodeURIComponent(id)}`, {
+    method: "GET",
+  });
+}
+
 export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }

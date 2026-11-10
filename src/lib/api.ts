@@ -183,6 +183,13 @@ export async function listAdminEvents(
   };
 }
 
+export async function getAdminEvent(id: string): Promise<Event> {
+  const result = await apiRequest<Event>(
+    `/api/admin/events/${encodeURIComponent(id)}`
+  );
+  return result.data;
+}
+
 export async function createAdminEvent(input: CreateEventInput): Promise<Event> {
   const result = await apiRequest<Event>("/api/admin/events", {
     method: "POST",
