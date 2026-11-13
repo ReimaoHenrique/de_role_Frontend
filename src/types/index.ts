@@ -148,6 +148,53 @@ export interface CreateGuestInput {
   cpf?: string;
 }
 
+// ---------------------------------------------------------------------------
+// Conta do participante
+// ---------------------------------------------------------------------------
+
+export interface Account {
+  id: string;
+  email: string;
+  name: string | null;
+  cpf: string | null;
+  birthDate: string | null;
+  age: number | null;
+  address: string | null;
+  bankAccount: string | null;
+  pixKey: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AccountSession {
+  account: Account;
+  expiresAt: string;
+}
+
+export interface RegisterAccountInput {
+  email: string;
+  password: string;
+  birthDate: string;
+  name?: string | null;
+  cpf?: string | null;
+  address?: string | null;
+  bankAccount?: string | null;
+  pixKey?: string | null;
+  eventId?: string | null;
+}
+
+export interface LoginAccountInput {
+  email: string;
+  password: string;
+}
+
+export interface RegisterAccountResult {
+  account: Account;
+  expiresAt: string;
+  ticket: Guest | null;
+  linkedTickets: number;
+}
+
 export interface LookupGuestInput {
   email?: string;
   cpf?: string;

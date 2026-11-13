@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertCircle, CheckCircle, Loader2, Ticket } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { AlertCircle, CheckCircle, Loader2, Ticket, User } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import {
   Card,
@@ -14,15 +16,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ApiError, createGuest, listEvents } from "@/lib/api";
+import { ApiError, listEvents, registerAccount } from "@/lib/api";
 import { formatarCPF, validarCPF, validarEmail } from "@/lib/validations";
 import type { Event, Guest } from "@/types";
 
 export default function CadastroPage() {
+  const router = useRouter();
+
   const [fullName, setFullName] = useState("");
-  const [cpf, setCpf] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [cpf, setCpf] = useState("");
   const [address, setAddress] = useState("");
   const [bankAccount, setBankAccount] = useState("");
   const [pixKey, setPixKey] = useState("");
@@ -32,7 +37,7 @@ export default function CadastroPage() {
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [guest, setGuest] = useState<Guest | null>(null);
+  const [ticket, setTicket] = useState<Guest | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -61,20 +66,15 @@ export default function CadastroPage() {
     setError(null);
 
     const normalizedEmail = email.trim().toLowerCase();
-    const cpfDigits = cpf.replace(/\D/g, "");
 
-    if (fullName.trim().length < 2) {
-      setError("Informe o nome completo.");
-      return;
-    }
-
-    if (!cpfDigits || !validarCPF(cpfDigits)) {
-      setError("CPF inválido. Confira os números informados.");
-      return;
-    }
-
+    // Obrigatórios: e-mail, senha e data de nascimento (idade).
     if (!normalizedEmail || !validarEmail(normalizedEmail)) {
       setError("Informe um e-mail válido.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("A senha deve ter pelo menos 8 caracteres.");
       return;
     }
 
@@ -83,20 +83,51 @@ export default function CadastroPage() {
       return;
     }
 
-    if (!eventId) {
-      setError("Selecione o evento para criar a conta.");
+    const birth = new Date(`${birthDate}T00:00:00`);
+    if (Number.isNaN(birth.getTime()) || birth > new Date()) {
+      setError("Data de nascimento inválida.");
+      return;
+    }
+
+    let age = new Date().getFullYear() - birth.getFullYear();
+    const monthDiff = new Date().getMonth() - birth.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && new Date().getDate() < birth.getDate())
+    ) {
+      age -= 1;
+    }
+    if (age < 13) {
+      setError("Você precisa ter pelo menos 13 anos para criar uma conta.");
+      return;
+    }
+
+    // Opcionais: nome, CPF, endereço, conta bancária, chave Pix e evento.
+    const cpfDigits = cpf.replace(/\D/g, "");
+    if (cpfDigits && !validarCPF(cpfDigits)) {
+      setError("CPF inválido. Confira os números informados.");
       return;
     }
 
     setLoading(true);
     try {
-      const created = await createGuest({
-        eventId,
-        name: fullName.trim(),
+      const result = await registerAccount({
         email: normalizedEmail,
-        cpf: cpfDigits,
+        password,
+        birthDate,
+        name: fullName.trim() || null,
+        cpf: cpfDigits || null,
+        address: address.trim() || null,
+        bankAccount: bankAccount.trim() || null,
+        pixKey: pixKey.trim() || null,
+        eventId: eventId || null,
       });
-      setGuest(created);
+
+      if (result.ticket) {
+        setTicket(result.ticket);
+      } else {
+        router.push("/perfil");
+      }
     } catch (caught) {
       setError(
         caught instanceof ApiError
@@ -108,15 +139,18 @@ export default function CadastroPage() {
     }
   }
 
-  if (guest) {
+  if (ticket) {
     return (
       <div className="container mx-auto px-4 py-12">
         <div className="mx-auto max-w-2xl">
           <div className="mb-8 text-center">
             <Ticket className="mx-auto mb-4 h-16 w-16 text-blue-600" />
-            <h1 className="mb-2 text-3xl font-bold text-foreground">Conta criada</h1>
+            <h1 className="mb-2 text-3xl font-bold text-foreground">
+              Conta criada
+            </h1>
             <p className="text-muted-foreground">
-              A conta foi vinculada ao evento e o ingresso foi gerado.
+              Sua conta foi criada e o ingresso para {ticket.event.name} foi
+              emitido.
             </p>
           </div>
 
@@ -125,38 +159,42 @@ export default function CadastroPage() {
               <CardTitle className="flex items-center justify-between gap-3">
                 <span className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green-600" />
-                  {guest.event.name}
+                  {ticket.event.name}
                 </span>
               </CardTitle>
               <CardDescription>
-                Dados da conta e do ingresso gerado.
+                Guarde a tag abaixo: ela é o seu ingresso.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex flex-col items-center gap-4 rounded-lg bg-muted/50 p-4 text-center sm:flex-row sm:text-left">
                 <div className="rounded-lg border bg-background p-2">
-                  <QRCodeSVG value={guest.ticketHash} size={132} level="M" />
+                  <QRCodeSVG value={ticket.ticketHash} size={132} level="M" />
                 </div>
                 <div className="min-w-0 flex-1 space-y-2">
                   <p className="text-sm font-medium text-muted-foreground">
                     Tag do ingresso
                   </p>
                   <p className="break-all rounded bg-muted px-2 py-1 font-mono text-sm">
-                    {guest.ticketHash}
+                    {ticket.ticketHash}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {guest.name} · {guest.email}
+                    {ticket.name} · {ticket.email}
                   </p>
                 </div>
               </div>
 
-              <Alert className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800 dark:text-green-300">
-                  Conta criada com sucesso para {guest.name}. O ingresso para{" "}
-                  {guest.event.name} está disponível.
-                </AlertDescription>
-              </Alert>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button asChild className="flex-1">
+                  <Link href="/perfil">
+                    <User className="h-4 w-4" />
+                    Ver meu perfil
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="flex-1">
+                  <Link href={`/eventos/${ticket.event.id}`}>Ver evento</Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -168,10 +206,13 @@ export default function CadastroPage() {
     <div className="container mx-auto px-4 py-12">
       <div className="mx-auto max-w-2xl">
         <div className="mb-8 text-center">
-          <Ticket className="mx-auto mb-4 h-16 w-16 text-blue-600" />
-          <h1 className="mb-2 text-3xl font-bold text-foreground">Criar conta</h1>
+          <User className="mx-auto mb-4 h-16 w-16 text-blue-600" />
+          <h1 className="mb-2 text-3xl font-bold text-foreground">
+            Criar conta
+          </h1>
           <p className="text-muted-foreground">
-            Cadastre o participante e gere a tag de ingresso do evento.
+            Só e-mail, senha e data de nascimento são obrigatórios. O restante
+            é opcional.
           </p>
         </div>
 
@@ -179,108 +220,148 @@ export default function CadastroPage() {
           <CardHeader>
             <CardTitle>Dados da conta</CardTitle>
             <CardDescription>
-              CPF, nome completo, e-mail, data de nascimento, endereço, conta
-              bancária e chave Pix são vinculados à conta criada.
+              Com a conta você acompanha seus próximos eventos e ingressos no
+              perfil.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="cadastro-name">Nome completo</Label>
+                <Label htmlFor="cadastro-email">
+                  E-mail <span className="text-destructive">*</span>
+                </Label>
                 <Input
-                  id="cadastro-name"
-                  placeholder="Maria Silva"
-                  value={fullName}
-                  onChange={(event) => setFullName(event.target.value)}
+                  id="cadastro-email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="maria@example.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
                 />
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="cadastro-cpf">CPF</Label>
+                  <Label htmlFor="cadastro-password">
+                    Senha <span className="text-destructive">*</span>
+                  </Label>
                   <Input
-                    id="cadastro-cpf"
-                    inputMode="numeric"
-                    placeholder="000.000.000-00"
-                    value={cpf}
-                    onChange={(event) => setCpf(formatarCPF(event.target.value))}
-                    maxLength={14}
+                    id="cadastro-password"
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder="Mínimo de 8 caracteres"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    minLength={8}
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="cadastro-email">E-mail</Label>
-                  <Input
-                    id="cadastro-email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="maria@example.com"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="cadastro-birth">Data de nascimento</Label>
+                  <Label htmlFor="cadastro-birth">
+                    Data de nascimento <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="cadastro-birth"
                     type="date"
                     value={birthDate}
                     onChange={(event) => setBirthDate(event.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cadastro-event">Evento</Label>
-                  <select
-                    id="cadastro-event"
-                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
-                    value={eventId}
-                    onChange={(event) => setEventId(event.target.value)}
-                    disabled={loadingEvents}
-                  >
-                    <option value="">{loadingEvents ? "Carregando eventos..." : "Selecione o evento"}</option>
-                    {events.map((eventOption) => (
-                      <option key={eventOption.id} value={eventOption.id}>
-                        {eventOption.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="cadastro-address">Endereço</Label>
-                <Input
-                  id="cadastro-address"
-                  placeholder="Rua, número, cidade, estado"
-                  value={address}
-                  onChange={(event) => setAddress(event.target.value)}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="cadastro-bank">Conta bancária</Label>
-                  <Input
-                    id="cadastro-bank"
-                    placeholder="Conta bancária"
-                    value={bankAccount}
-                    onChange={(event) => setBankAccount(event.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cadastro-pix">Chave Pix</Label>
-                  <Input
-                    id="cadastro-pix"
-                    placeholder="Chave Pix"
-                    value={pixKey}
-                    onChange={(event) => setPixKey(event.target.value)}
+                    required
                   />
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading || loadingEvents}>
+              <div className="rounded-md border border-dashed p-3">
+                <p className="mb-3 text-xs font-medium uppercase text-muted-foreground">
+                  Opcionais
+                </p>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cadastro-name">Nome completo</Label>
+                    <Input
+                      id="cadastro-name"
+                      placeholder="Maria Silva"
+                      value={fullName}
+                      onChange={(event) => setFullName(event.target.value)}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="cadastro-cpf">CPF</Label>
+                      <Input
+                        id="cadastro-cpf"
+                        inputMode="numeric"
+                        placeholder="000.000.000-00"
+                        value={cpf}
+                        onChange={(event) =>
+                          setCpf(formatarCPF(event.target.value))
+                        }
+                        maxLength={14}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cadastro-event">Evento</Label>
+                      <select
+                        id="cadastro-event"
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                        value={eventId}
+                        onChange={(event) => setEventId(event.target.value)}
+                        disabled={loadingEvents}
+                      >
+                        <option value="">
+                          {loadingEvents
+                            ? "Carregando eventos..."
+                            : "Nenhum (depois no evento)"}
+                        </option>
+                        {events.map((eventOption) => (
+                          <option key={eventOption.id} value={eventOption.id}>
+                            {eventOption.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="cadastro-address">Endereço</Label>
+                    <Input
+                      id="cadastro-address"
+                      placeholder="Rua, número, cidade, estado"
+                      value={address}
+                      onChange={(event) => setAddress(event.target.value)}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="cadastro-bank">Conta bancária</Label>
+                      <Input
+                        id="cadastro-bank"
+                        placeholder="Conta bancária"
+                        value={bankAccount}
+                        onChange={(event) => setBankAccount(event.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cadastro-pix">Chave Pix</Label>
+                      <Input
+                        id="cadastro-pix"
+                        placeholder="Chave Pix"
+                        value={pixKey}
+                        onChange={(event) => setPixKey(event.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading || loadingEvents}
+              >
                 {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -290,6 +371,16 @@ export default function CadastroPage() {
                   "Criar conta"
                 )}
               </Button>
+
+              <p className="text-center text-sm text-muted-foreground">
+                Já tem uma conta?{" "}
+                <Link
+                  href="/login"
+                  className="text-blue-600 hover:underline"
+                >
+                  Entrar
+                </Link>
+              </p>
             </form>
 
             {error && (

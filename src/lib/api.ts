@@ -1,4 +1,6 @@
 import type {
+  Account,
+  AccountSession,
   AdminLoginResult,
   AdminSession,
   ApiMeta,
@@ -12,9 +14,12 @@ import type {
   ListEventsParams,
   ListGuestsParams,
   ListProducersParams,
+  LoginAccountInput,
   LookupGuestInput,
   Paginated,
   Producer,
+  RegisterAccountInput,
+  RegisterAccountResult,
   UpdateEventInput,
   UpdateProducerInput,
 } from "@/types";
@@ -299,6 +304,46 @@ export async function updateAdminProducer(
     `/api/admin/producers/${encodeURIComponent(id)}`,
     { method: "PATCH", body: input }
   );
+  return result.data;
+}
+
+// ---------------------------------------------------------------------------
+// Conta do participante
+// ---------------------------------------------------------------------------
+
+export async function registerAccount(
+  input: RegisterAccountInput
+): Promise<RegisterAccountResult> {
+  const result = await apiRequest<RegisterAccountResult>(
+    "/api/account/register",
+    { method: "POST", body: input }
+  );
+  return result.data;
+}
+
+export async function loginAccount(
+  input: LoginAccountInput
+): Promise<AccountSession> {
+  const result = await apiRequest<AccountSession>("/api/account/login", {
+    method: "POST",
+    body: input,
+  });
+  return result.data;
+}
+
+export async function logoutAccount(): Promise<void> {
+  await apiRequest<{ loggedOut: boolean }>("/api/account/logout", {
+    method: "POST",
+  });
+}
+
+export async function accountMe(): Promise<Account> {
+  const result = await apiRequest<Account>("/api/account/me");
+  return result.data;
+}
+
+export async function accountGuests(): Promise<Guest[]> {
+  const result = await apiRequest<Guest[]>("/api/account/guests");
   return result.data;
 }
 
