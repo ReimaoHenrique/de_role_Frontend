@@ -360,6 +360,41 @@ export async function updateAccount(data: {
   return result.data;
 }
 
+export async function accountEvents(): Promise<Event[]> {
+  const result = await apiRequest<Event[]>("/api/account/events");
+  return result.data;
+}
+
+export async function createAccountEvent(
+  input: CreateEventInput
+): Promise<Event> {
+  const result = await apiRequest<Event>("/api/account/events", {
+    method: "POST",
+    body: input,
+  });
+  return result.data;
+}
+
+export async function updateAccountEvent(
+  id: string,
+  input: UpdateEventInput
+): Promise<Event> {
+  const result = await apiRequest<Event>(
+    `/api/account/events/${encodeURIComponent(id)}`,
+    {
+      method: "PATCH",
+      body: input,
+    }
+  );
+  return result.data;
+}
+
+export async function cancelAccountEvent(id: string): Promise<void> {
+  await apiRequest<void>(`/api/account/events/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+}
+
 // ---------------------------------------------------------------------------
 // SHA-256
 // ---------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -141,6 +141,11 @@ if (typeof window !== "undefined") {
 }
 
 export function usePwaInstall() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const current = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   const install = useCallback(async () => {
@@ -209,21 +214,24 @@ export function usePwaInstall() {
     setState({ forcedOpen: true });
   }, []);
 
-  const { isMobile, isIOS, isInstalled, dismissed, forcedOpen, shared } = current;
+  const { isMobile, isIOS, isInstalled, dismissed, forcedOpen, shared } = mounted
+    ? current
+    : INITIAL_STATE;
 
   // Automático: apenas em dispositivos móveis e não descartado antes.
   // Forçado (botão "Instalar app"): sempre abre.
   const canShow =
-    !isInstalled && ((isMobile && !dismissed) || forcedOpen);
+    mounted && !isInstalled && ((isMobile && !dismissed) || forcedOpen);
 
   const canShare =
+    mounted &&
     typeof navigator !== "undefined" &&
     typeof (navigator as ShareCapableNavigator).share === "function";
 
   return useMemo(
     () => ({
       canShow,
-      installEvent: current.installEvent,
+      installEvent: mounted ? current.installEvent : null,
       isIOS,
       isInstalled,
       canShare,
@@ -235,6 +243,7 @@ export function usePwaInstall() {
     }),
     [
       canShow,
+      mounted,
       current.installEvent,
       isIOS,
       isInstalled,
