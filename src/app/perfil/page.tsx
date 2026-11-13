@@ -23,7 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ApiError, accountGuests, accountMe, logoutAccount } from "@/lib/api";
+import { ApiError, accountGuests, accountMe, updateAccount, logoutAccount } from "@/lib/api";
 import {
   formatDateTime,
   GUEST_STATUS_LABELS,
