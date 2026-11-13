@@ -10,6 +10,7 @@ import {
   Github,
   ChevronDown,
   Download,
+  UserPlus,
 } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
@@ -76,6 +77,13 @@ export function Header() {
             >
               <Search className="h-4 w-4" />
               <span>Verificar Ingresso</span>
+            </Link>
+            <Link
+              href="/cadastro"
+              className="flex items-center space-x-1 text-muted-foreground hover:text-blue-600 transition-colors"
+            >
+              <UserPlus className="h-4 w-4" />
+              <span>Criar conta</span>
             </Link>
             <Link
               href="/admin"
@@ -174,6 +182,14 @@ export function Header() {
             >
               <Search className="h-4 w-4" />
               <span>Verificar Ingresso</span>
+            </Link>
+            <Link
+              href="/cadastro"
+              className="flex items-center space-x-2 text-muted-foreground hover:text-blue-600 transition-colors"
+              onClick={() => setDrawerOpen(false)}
+            >
+              <UserPlus className="h-4 w-4" />
+              <span>Criar conta</span>
             </Link>
             <Link
               href="/admin"
