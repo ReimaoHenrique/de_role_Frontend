@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 export function Footer() {
   return (
     <footer className="bg-gray-900 dark:bg-gray-950 text-white py-8 mt-auto">
@@ -31,6 +32,11 @@ export function Footer() {
                 <a href="#" className="hover:text-white transition-colors">
                   Suporte
                 </a>
+              </li>
+              <li>
+                <Link href="/admin" className="hover:text-white transition-colors text-xs text-gray-500 hover:text-gray-300">
+                  Área Administrativa
+                </Link>
               </li>
             </ul>
           </div>

@@ -93,13 +93,6 @@ export function Header() {
               <User className="h-4 w-4" />
               <span>Perfil</span>
             </Link>
-            <Link
-              href="/admin"
-              className="flex items-center space-x-1 text-muted-foreground hover:text-blue-600 transition-colors"
-            >
-              <Settings className="h-4 w-4" />
-              <span>Admin</span>
-            </Link>
             <div className="relative">
               <button
                 type="button"
@@ -206,14 +199,6 @@ export function Header() {
             >
               <User className="h-4 w-4" />
               <span>Perfil</span>
-            </Link>
-            <Link
-              href="/admin"
-              className="flex items-center space-x-2 text-muted-foreground hover:text-blue-600 transition-colors"
-              onClick={() => setDrawerOpen(false)}
-            >
-              <Settings className="h-4 w-4" />
-              <span>Admin</span>
             </Link>
             <div className="flex flex-col gap-2 border-t pt-4">
               <span className="flex items-center space-x-2 text-sm font-medium">
