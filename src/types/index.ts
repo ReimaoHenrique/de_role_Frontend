@@ -24,6 +24,16 @@ export interface Event {
   availableTickets: number;
   status: EventStatus;
   termsOfUse: string;
+  producerId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Producer {
+  id: string;
+  name: string;
+  email: string;
+  description: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -169,6 +179,21 @@ export interface CreateEventInput {
   totalTickets: number;
   termsOfUse: string;
   status?: EventStatus;
+  producerId?: string | null;
 }
 
 export type UpdateEventInput = Partial<CreateEventInput>;
+
+export interface CreateProducerInput {
+  name: string;
+  email: string;
+  description?: string | null;
+}
+
+export type UpdateProducerInput = Partial<CreateProducerInput>;
+
+export interface ListProducersParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+}

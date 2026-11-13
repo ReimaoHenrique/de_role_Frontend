@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ApiError, adminLogin, sha256Hex } from "@/lib/api";
+import { ApiError, adminLogin } from "@/lib/api";
+import { validarEmail } from "@/lib/validations";
 
 interface AdminLoginProps {
   onSuccess: () => void;
@@ -21,6 +22,7 @@ interface AdminLoginProps {
 }
 
 export function AdminLogin({ onSuccess, notice }: AdminLoginProps) {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -30,6 +32,12 @@ export function AdminLogin({ onSuccess, notice }: AdminLoginProps) {
     event.preventDefault();
     setError(null);
 
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !validarEmail(normalizedEmail)) {
+      setError("Digite um e-mail válido.");
+      return;
+    }
+
     if (!password) {
       setError("Digite a senha administrativa.");
       return;
@@ -37,15 +45,15 @@ export function AdminLogin({ onSuccess, notice }: AdminLoginProps) {
 
     setLoading(true);
     try {
-      const hash = await sha256Hex(password);
-      await adminLogin(hash);
+      await adminLogin(normalizedEmail, password);
+      setEmail("");
       setPassword("");
       onSuccess();
     } catch (caught) {
       if (caught instanceof ApiError) {
         setError(
           caught.status === 401
-            ? "Senha incorreta. Verifique e tente novamente."
+            ? "E-mail ou senha incorretos. Verifique e tente novamente."
             : caught.message
         );
       } else {
@@ -73,12 +81,25 @@ export function AdminLogin({ onSuccess, notice }: AdminLoginProps) {
           <CardHeader>
             <CardTitle>Entrar</CardTitle>
             <CardDescription>
-              A senha é convertida em SHA-256 no seu navegador. O servidor nunca
-              recebe a senha em texto puro.
+              Informe o e-mail e a senha da conta administrativa. A credencial é
+              convertida em hash SHA-256 no seu navegador e o token de sessão fica
+              em cookie seguro.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="admin-email">E-mail</Label>
+                <Input
+                  id="admin-email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="Digite seu e-mail"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="admin-password">Senha</Label>
                 <div className="relative">
@@ -123,7 +144,7 @@ export function AdminLogin({ onSuccess, notice }: AdminLoginProps) {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={loading || !password}
+                disabled={loading || !email || !password}
               >
                 {loading ? (
                   <>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import {
   Dialog,
@@ -17,6 +17,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   ApiError,
   createAdminEvent,
+  createAdminProducer,
+  listAdminProducers,
   updateAdminEvent,
 } from "@/lib/api";
 import {
@@ -28,6 +30,7 @@ import type {
   CreateEventInput,
   Event,
   EventStatus,
+  Producer,
 } from "@/types";
 
 interface EventFormDialogProps {
@@ -47,7 +50,10 @@ interface FormState {
   totalTickets: string;
   termsOfUse: string;
   status: EventStatus;
+  producerId: string;
 }
+
+const NEW_PRODUTOR = "__new__";
 
 function initialState(event: Event | null): FormState {
   if (!event) {
@@ -61,6 +67,7 @@ function initialState(event: Event | null): FormState {
       totalTickets: "100",
       termsOfUse: "Entrada permitida mediante apresentação de documento com foto.",
       status: "ACTIVE",
+      producerId: "",
     };
   }
 
@@ -74,6 +81,7 @@ function initialState(event: Event | null): FormState {
     totalTickets: String(event.totalTickets),
     termsOfUse: event.termsOfUse,
     status: event.status,
+    producerId: event.producerId ?? "",
   };
 }
 
@@ -119,6 +127,32 @@ function EventFormBody({
   const [form, setForm] = useState<FormState>(() => initialState(event));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [producers, setProducers] = useState<Producer[]>([]);
+  const [loadingProducers, setLoadingProducers] = useState(false);
+  const [newProducerName, setNewProducerName] = useState("");
+  const [newProducerEmail, setNewProducerEmail] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadProducers() {
+      setLoadingProducers(true);
+      try {
+        const result = await listAdminProducers({ limit: 200 });
+        if (active) setProducers(result.data);
+      } catch {
+        if (active) setProducers([]);
+      } finally {
+        if (active) setLoadingProducers(false);
+      }
+    }
+
+    void loadProducers();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function update<K extends keyof FormState>(field: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -167,10 +201,32 @@ function EventFormBody({
       totalTickets,
       termsOfUse: form.termsOfUse.trim(),
       status: form.status,
+      producerId: form.producerId && form.producerId !== NEW_PRODUTOR ? form.producerId : null,
     };
+
+    if (form.producerId === NEW_PRODUTOR) {
+      const name = newProducerName.trim();
+      const producerEmail = newProducerEmail.trim().toLowerCase();
+      if (name.length < 3) {
+        setError("O nome do produtor precisa ter pelo menos 3 caracteres.");
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(producerEmail)) {
+        setError("Informe um e-mail válido para o produtor.");
+        return;
+      }
+    }
 
     setLoading(true);
     try {
+      if (form.producerId === NEW_PRODUTOR) {
+        const producer = await createAdminProducer({
+          name: newProducerName.trim(),
+          email: newProducerEmail.trim().toLowerCase(),
+        });
+        payload.producerId = producer.id;
+      }
+
       const saved = event
         ? await updateAdminEvent(event.id, payload)
         : await createAdminEvent(payload);
@@ -266,6 +322,57 @@ function EventFormBody({
               )
             )}
           </select>
+        </div>
+
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="event-producer">Produtor</Label>
+          <select
+            id="event-producer"
+            value={form.producerId}
+            onChange={(event) => update("producerId", event.target.value)}
+            disabled={loadingProducers}
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+          >
+            <option value="">
+              {loadingProducers ? "Carregando produtores..." : "Nenhum produtor"}
+            </option>
+            {producers.map((producer) => (
+              <option key={producer.id} value={producer.id}>
+                {producer.name} · {producer.email}
+              </option>
+            ))}
+            <option value={NEW_PRODUTOR}>+ Novo produtor...</option>
+          </select>
+
+          {form.producerId === NEW_PRODUTOR && (
+            <div className="grid grid-cols-1 gap-3 rounded-md border border-dashed p-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="event-producer-name">Nome do produtor</Label>
+                <Input
+                  id="event-producer-name"
+                  value={newProducerName}
+                  onChange={(event) => setNewProducerName(event.target.value)}
+                  maxLength={120}
+                  placeholder="Produtora X"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="event-producer-email">E-mail do produtor</Label>
+                <Input
+                  id="event-producer-email"
+                  type="email"
+                  value={newProducerEmail}
+                  onChange={(event) => setNewProducerEmail(event.target.value)}
+                  maxLength={255}
+                  placeholder="contato@produtora.com"
+                />
+              </div>
+            </div>
+          )}
+
+          <p className="text-xs text-muted-foreground">
+            O produtor detém as informações e os eventos vinculados a ele.
+          </p>
         </div>
 
         <div className="space-y-2">

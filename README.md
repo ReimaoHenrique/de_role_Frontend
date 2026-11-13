@@ -42,7 +42,8 @@ browser -> Next.js route handler -> API Gateway -> serviços internos
 
 - O JWT administrativo fica em cookie `httpOnly`, `secure` (em produção),
   `sameSite=lax`. Nada é salvo em `localStorage`/`sessionStorage`.
-- O login recebe a senha no browser, calcula SHA-256 e envia somente o hash.
+- O login recebe o e-mail e a senha no browser, calcula o hash SHA-256 da credencial
+  (`e-mail:senha`) e envia somente o hash para o backend.
 - Erros usam o envelope canônico `{ success: false, error: { code, message } }`.
 - `401` limpa o cookie e devolve o usuário para o login.
 
