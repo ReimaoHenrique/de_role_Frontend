@@ -347,6 +347,19 @@ export async function accountGuests(): Promise<Guest[]> {
   return result.data;
 }
 
+export async function updateAccount(data: {
+  name?: string;
+  cpf?: string;
+  address?: string;
+  pixKey?: string;
+}): Promise<Account> {
+  const result = await apiRequest<Account>("/api/account/me", {
+    method: "PATCH",
+    body: data,
+  });
+  return result.data;
+}
+
 // ---------------------------------------------------------------------------
 // SHA-256
 // ---------------------------------------------------------------------------
