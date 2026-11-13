@@ -8,6 +8,22 @@ export function PwaRegister() {
       return;
     }
 
+    if (process.env.NODE_ENV === "development") {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const reg of registrations) {
+          reg.unregister();
+        }
+      });
+      if ("caches" in window) {
+        caches.keys().then((keys) => {
+          for (const key of keys) {
+            caches.delete(key);
+          }
+        });
+      }
+      return;
+    }
+
     let registration: ServiceWorkerRegistration | undefined;
     // Só recarrega quando um SW *anterior* é substituído (update real).
     // Na primeira visita não há controller anterior, então não deve recarregar.

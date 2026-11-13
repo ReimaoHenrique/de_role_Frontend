@@ -6,7 +6,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import {
   Home,
   Search,
-  Settings,
   Github,
   ChevronDown,
   Download,

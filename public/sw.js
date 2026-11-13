@@ -45,6 +45,9 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
+  // Em ambiente local de desenvolvimento, nunca intercepta para evitar chunks obsoletos do Turbopack
+  if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return;
+
   // Recursos externos (API do gateway, imagens remotas): sempre da rede.
   if (url.origin !== self.location.origin) return;
 
