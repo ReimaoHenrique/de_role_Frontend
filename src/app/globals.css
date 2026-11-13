@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "leaflet/dist/leaflet.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -120,3 +121,44 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Ocultar barra de rolagem mas permitir scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Customização moderna para popups do Leaflet */
+.leaflet-popup-content-wrapper {
+  border-radius: 1rem !important;
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.2) !important;
+  padding: 4px !important;
+  background: var(--color-card, #ffffff) !important;
+  color: var(--color-card-foreground, #0f172a) !important;
+  border: 1px solid var(--color-border, #e2e8f0) !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--color-card, #ffffff) !important;
+}
+
+.leaflet-container {
+  font-family: inherit !important;
+}
+
+@keyframes spinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spinSlow 10s linear infinite;
+}
+

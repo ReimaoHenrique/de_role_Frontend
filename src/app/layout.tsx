@@ -19,13 +19,13 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
-  title: "TicketPlatform - Plataforma de Ingressos",
-  description: "Sua plataforma de confiança para compra e verificação de ingressos para eventos.",
+  title: "De Rolê - Plataforma de Ingressos e Eventos",
+  description: "Descubra os melhores rolês e eventos perto de você. Ingressos rápidos, seguros e sem complicação.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Ingressos",
+    title: "De Rolê",
   },
   other: {
     // Necessário para o modo standalone no Safari do iOS/iPadOS.
@@ -42,24 +42,24 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    siteName: "TicketPlatform",
-    title: "TicketPlatform - Plataforma de Ingressos",
+    siteName: "De Rolê",
+    title: "De Rolê - Plataforma de Ingressos e Eventos",
     description:
-      "Sua plataforma de confiança para compra e verificação de ingressos para eventos.",
+      "Descubra os melhores rolês e eventos perto de você. Ingressos rápidos, seguros e sem complicação.",
     images: [
       {
         url: "/logo.png",
         width: 471,
         height: 530,
-        alt: "TicketPlatform",
+        alt: "De Rolê",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "TicketPlatform - Plataforma de Ingressos",
+    title: "De Rolê - Plataforma de Ingressos e Eventos",
     description:
-      "Sua plataforma de confiança para compra e verificação de ingressos para eventos.",
+      "Descubra os melhores rolês e eventos perto de você. Ingressos rápidos, seguros e sem complicação.",
     images: ["/logo.png"],
   },
 };

@@ -52,14 +52,14 @@ export function Header() {
             {/* Logo do app no menu de navegação */}
             <Image
               src="/logo.png"
-              alt="Ingressos"
+              alt="De Rolê"
               width={32}
               height={36}
               className="h-9 w-8 rounded-lg object-contain"
               priority
             />
             <span className="text-2xl font-bold text-foreground">
-              TicketPlatform
+              De Rolê
             </span>
           </Link>
 

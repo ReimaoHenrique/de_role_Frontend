@@ -27,7 +27,32 @@ export interface Event {
   producerId: string | null;
   createdAt: string;
   updatedAt: string;
+  category?: string;
+  latitude?: number;
+  longitude?: number;
+  distanceKm?: number;
+  distanceLabel?: string;
+  dateLabel?: string;
 }
+
+export type EventCategory =
+  | "Festas"
+  | "Shows"
+  | "Música"
+  | "Cultura"
+  | "Gastronomia"
+  | "Outros";
+
+export type EventFilterType =
+  | "ALL"
+  | "FESTAS"
+  | "SHOWS"
+  | "MUSICA"
+  | "GRATUITO"
+  | "HOJE"
+  | "FIM_DE_SEMANA";
+
+export type EventSortType = "distance" | "date";
 
 export interface Producer {
   id: string;

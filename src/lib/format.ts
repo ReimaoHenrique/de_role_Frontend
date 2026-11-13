@@ -103,6 +103,94 @@ export function guestStatusClass(status: GuestStatus): string {
   }
 }
 
+/** Formata a data com expressões inteligentes: "Hoje, 22h", "Amanhã, 18h", "Sábado, 20h" */
+export function formatRelativeEventDate(
+  iso: string,
+  now: Date = new Date()
+): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "Data a confirmar";
+
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const timeStr = minutes === 0 ? `${hours}h` : `${hours}h${String(minutes).padStart(2, "0")}`;
+
+  const dYear = date.getFullYear();
+  const dMonth = date.getMonth();
+  const dDay = date.getDate();
+
+  const nowYear = now.getFullYear();
+  const nowMonth = now.getMonth();
+  const nowDay = now.getDate();
+
+  const eventMid = new Date(dYear, dMonth, dDay).getTime();
+  const nowMid = new Date(nowYear, nowMonth, nowDay).getTime();
+  const diffDays = Math.round((eventMid - nowMid) / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
+    return `Hoje, ${timeStr}`;
+  }
+  if (diffDays === 1) {
+    return `Amanhã, ${timeStr}`;
+  }
+  if (diffDays >= 2 && diffDays <= 6) {
+    const dayNames = [
+      "Domingo",
+      "Segunda",
+      "Terça",
+      "Quarta",
+      "Quinta",
+      "Sexta",
+      "Sábado",
+    ];
+    return `${dayNames[date.getDay()]}, ${timeStr}`;
+  }
+  if (diffDays === -1) {
+    return `Ontem, ${timeStr}`;
+  }
+
+  const sameYear = dYear === nowYear;
+  const day = String(dDay).padStart(2, "0");
+  const month = String(dMonth + 1).padStart(2, "0");
+
+  if (sameYear) {
+    return `${day}/${month}, ${timeStr}`;
+  }
+  const yearShort = String(dYear).slice(-2);
+  return `${day}/${month}/${yearShort}, ${timeStr}`;
+}
+
+export function isEventToday(iso: string, now: Date = new Date()): boolean {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return false;
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  );
+}
+
+export function isEventWeekend(iso: string, now: Date = new Date()): boolean {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return false;
+
+  const day = date.getDay();
+  const isWeekendDay = day === 0 || day === 6 || (day === 5 && date.getHours() >= 17);
+  if (!isWeekendDay) return false;
+
+  const diffMs = date.getTime() - now.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  return diffDays >= -1 && diffDays <= 7;
+}
+
+export function formatPriceLabel(priceInCents: number): string {
+  if (priceInCents === 0) {
+    return "Gratuito";
+  }
+  return formatCurrencyFromCents(priceInCents);
+}
+
+
 export function occupancyPercentage(issued: number, total: number): number {
   if (!total) return 0;
   return Math.min(100, Math.round((issued / total) * 100));
