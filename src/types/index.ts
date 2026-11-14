@@ -252,6 +252,9 @@ export interface CreateEventInput {
   termsOfUse: string;
   status?: EventStatus;
   producerId?: string | null;
+  category?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export type UpdateEventInput = Partial<CreateEventInput>;

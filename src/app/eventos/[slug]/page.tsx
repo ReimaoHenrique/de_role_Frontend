@@ -24,6 +24,7 @@ import {
 } from "@/lib/format";
 import { GatewayError, gatewayRequest } from "@/lib/gateway";
 import { getFeaturedEventBySlug } from "@/lib/events-data";
+import { findUserEvent } from "@/lib/user-events";
 import type { Event } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -44,17 +45,22 @@ export default async function EventPage({ params }: EventPageProps) {
     );
     event = result.data;
   } catch (caught) {
-    const featured = getFeaturedEventBySlug(slug);
-    if (featured) {
-      event = featured;
+    const userEvent = findUserEvent(slug);
+    if (userEvent) {
+      event = userEvent;
     } else {
-      if (caught instanceof GatewayError && caught.status === 404) {
-        notFound();
+      const featured = getFeaturedEventBySlug(slug);
+      if (featured) {
+        event = featured;
+      } else {
+        if (caught instanceof GatewayError && caught.status === 404) {
+          notFound();
+        }
+        error =
+          caught instanceof GatewayError
+            ? caught.message
+            : "Não foi possível carregar os detalhes do evento.";
       }
-      error =
-        caught instanceof GatewayError
-          ? caught.message
-          : "Não foi possível carregar os detalhes do evento.";
     }
   }
 

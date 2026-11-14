@@ -311,15 +311,11 @@ export default function PerfilPage() {
                 Crie e gerencie os eventos produzidos por você
               </p>
             </div>
-            <Button
-              size="sm"
-              onClick={() => {
-                setEditingEvent(null);
-                setEventDialogOpen(true);
-              }}
-            >
-              <Plus className="h-4 w-4" />
-              Novo evento
+            <Button asChild size="sm">
+              <Link href="/eventos/criar">
+                <Plus className="h-4 w-4 mr-1" />
+                Novo evento
+              </Link>
             </Button>
           </div>
 
@@ -333,14 +329,11 @@ export default function PerfilPage() {
                 <p className="text-sm text-muted-foreground max-w-md mt-1 mb-4">
                   Transforme sua conta em produtora! Crie seu primeiro evento para começar a emitir e gerenciar ingressos.
                 </p>
-                <Button
-                  onClick={() => {
-                    setEditingEvent(null);
-                    setEventDialogOpen(true);
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Criar meu primeiro evento
+                <Button asChild>
+                  <Link href="/eventos/criar">
+                    <Plus className="h-4 w-4 mr-1" />
+                    Criar meu primeiro evento
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
