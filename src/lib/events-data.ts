@@ -1,5 +1,4 @@
 import type { Event, EventCategory } from "@/types";
-import { listUserEvents } from "./user-events";
 import {
   DEFAULT_USER_COORDS,
   haversineDistance,
@@ -268,17 +267,11 @@ export function enrichEvents(
 ): Event[] {
   const featured = getFeaturedRoleEvents(userCoords);
 
-  // Unifica eventos vindos da API com os eventos em destaque e criados pelo usuário
+  // Unifica eventos vindos da API com os eventos em destaque
   const allEventsMap = new Map<string, Event>();
 
   // Primeiro adiciona os eventos em destaque (que cobrem os exemplos exigidos)
   for (const item of featured) {
-    allEventsMap.set(item.slug, item);
-  }
-
-  // Adiciona eventos criados pelo usuário
-  const userEvents = listUserEvents();
-  for (const item of userEvents) {
     allEventsMap.set(item.slug, item);
   }
 

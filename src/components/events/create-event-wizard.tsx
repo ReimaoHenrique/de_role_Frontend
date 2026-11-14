@@ -284,6 +284,21 @@ export function CreateEventWizard() {
         category: mainCategory,
       });
 
+      // Salva também no localStorage para redundância e disponibilidade imediata no navegador
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(`de_role_event_${created.slug}`, JSON.stringify(created));
+          localStorage.setItem(`de_role_event_${created.id}`, JSON.stringify(created));
+          const savedList = JSON.parse(localStorage.getItem("de_role_user_events") || "[]");
+          localStorage.setItem(
+            "de_role_user_events",
+            JSON.stringify([created, ...savedList.filter((e: Event) => e.slug !== created.slug)])
+          );
+        } catch {
+          // ignore
+        }
+      }
+
       setCreatedEvent(created);
     } catch (caught) {
       setError(

@@ -1,0 +1,24 @@
+[
+  {
+    "id": "2b828c-role-criado",
+    "slug": "evento-com-baixa-qualidade-2b828c",
+    "name": "Evento com Baixa Qualidade",
+    "description": "Evento criado pelo organizador na plataforma De Rolê. Venha curtir com a gente!",
+    "imageUrl": "/events/boreal.jpg",
+    "startsAt": "2026-11-14T22:00:00.000Z",
+    "venue": "Rua Augusta, 1200 - Consolação, São Paulo - SP",
+    "priceInCents": 0,
+    "price": 0,
+    "totalTickets": 100,
+    "issuedTickets": 12,
+    "availableTickets": 88,
+    "status": "ACTIVE",
+    "termsOfUse": "Entrada permitida mediante apresentação de documento oficial com foto.",
+    "producerId": null,
+    "createdAt": "2026-11-13T21:40:00.000Z",
+    "updatedAt": "2026-11-13T21:40:00.000Z",
+    "category": "Festas",
+    "latitude": -23.555,
+    "longitude": -46.66
+  }
+]

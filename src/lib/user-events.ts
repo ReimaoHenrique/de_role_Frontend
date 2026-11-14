@@ -1,7 +1,43 @@
+import fs from "fs";
+import path from "path";
 import type { CreateEventInput, Event, UpdateEventInput } from "@/types";
 
-// Armazenamento em memória no servidor para eventos criados pelo usuário
-const createdEventsStore = new Map<string, Event>();
+const DATA_DIR = path.join(process.cwd(), "data");
+const EVENTS_FILE = path.join(DATA_DIR, "user-events.json");
+
+function ensureDirectoryExists() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+  } catch (err) {
+    console.error("Erro ao criar diretório data:", err);
+  }
+}
+
+function readEventsFromFile(): Event[] {
+  try {
+    ensureDirectoryExists();
+    if (!fs.existsSync(EVENTS_FILE)) {
+      return [];
+    }
+    const content = fs.readFileSync(EVENTS_FILE, "utf-8");
+    if (!content.trim()) return [];
+    return JSON.parse(content) as Event[];
+  } catch (err) {
+    console.error("Erro ao ler user-events.json:", err);
+    return [];
+  }
+}
+
+function writeEventsToFile(events: Event[]): void {
+  try {
+    ensureDirectoryExists();
+    fs.writeFileSync(EVENTS_FILE, JSON.stringify(events, null, 2), "utf-8");
+  } catch (err) {
+    console.error("Erro ao salvar user-events.json:", err);
+  }
+}
 
 export function saveUserEvent(
   input: CreateEventInput & {
@@ -10,6 +46,8 @@ export function saveUserEvent(
     longitude?: number;
   }
 ): Event {
+  const events = readEventsFromFile();
+
   const id = crypto.randomUUID();
   const slugBase = input.name
     .toLowerCase()
@@ -44,27 +82,39 @@ export function saveUserEvent(
     longitude: input.longitude,
   };
 
-  createdEventsStore.set(newEvent.id, newEvent);
-  createdEventsStore.set(newEvent.slug, newEvent);
+  events.unshift(newEvent);
+  writeEventsToFile(events);
+
   return newEvent;
 }
 
 export function listUserEvents(): Event[] {
-  const unique = new Map<string, Event>();
-  for (const event of createdEventsStore.values()) {
-    unique.set(event.id, event);
-  }
-  return Array.from(unique.values());
+  return readEventsFromFile();
 }
 
 export function findUserEvent(idOrSlug: string): Event | null {
-  return createdEventsStore.get(idOrSlug) ?? null;
+  if (!idOrSlug) return null;
+  const events = readEventsFromFile();
+  const normalized = idOrSlug.trim().toLowerCase();
+
+  return (
+    events.find(
+      (e) =>
+        e.id === idOrSlug ||
+        e.slug === idOrSlug ||
+        e.slug.toLowerCase() === normalized ||
+        e.id.toLowerCase() === normalized ||
+        e.slug.endsWith(`-${normalized}`)
+    ) ?? null
+  );
 }
 
 export function updateUserEvent(id: string, input: UpdateEventInput): Event | null {
-  const existing = createdEventsStore.get(id);
-  if (!existing) return null;
+  const events = readEventsFromFile();
+  const index = events.findIndex((e) => e.id === id || e.slug === id);
+  if (index === -1) return null;
 
+  const existing = events[index];
   const updated: Event = {
     ...existing,
     ...(input.name !== undefined ? { name: input.name } : {}),
@@ -81,16 +131,16 @@ export function updateUserEvent(id: string, input: UpdateEventInput): Event | nu
     updatedAt: new Date().toISOString(),
   };
 
-  createdEventsStore.set(updated.id, updated);
-  createdEventsStore.set(updated.slug, updated);
+  events[index] = updated;
+  writeEventsToFile(events);
   return updated;
 }
 
 export function deleteUserEvent(id: string): boolean {
-  const existing = createdEventsStore.get(id);
-  if (!existing) return false;
+  const events = readEventsFromFile();
+  const filtered = events.filter((e) => e.id !== id && e.slug !== id);
+  if (filtered.length === events.length) return false;
 
-  createdEventsStore.delete(existing.id);
-  createdEventsStore.delete(existing.slug);
+  writeEventsToFile(filtered);
   return true;
 }

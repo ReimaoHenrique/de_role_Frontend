@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EventsExplorer } from "@/components/gps/events-explorer";
 import { buildQuery, GatewayError, gatewayRequest } from "@/lib/gateway";
+import { listUserEvents } from "@/lib/user-events";
 import type { Event } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +32,24 @@ export default async function Home({ searchParams }: HomePageProps) {
     if (caught instanceof GatewayError) {
       error = caught.message;
     }
+  }
+
+  // Adiciona eventos criados localmente pelo usuário no topo da lista
+  try {
+    const userEvents = listUserEvents();
+    if (userEvents.length > 0) {
+      const filteredUserEvents = search
+        ? userEvents.filter(
+            (e) =>
+              e.name.toLowerCase().includes(search.toLowerCase()) ||
+              e.venue.toLowerCase().includes(search.toLowerCase()) ||
+              e.description.toLowerCase().includes(search.toLowerCase())
+          )
+        : userEvents;
+      events = [...filteredUserEvents, ...events];
+    }
+  } catch {
+    // ignore
   }
 
   return (
