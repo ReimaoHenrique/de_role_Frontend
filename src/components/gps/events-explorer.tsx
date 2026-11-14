@@ -39,8 +39,8 @@ export function EventsExplorer({
   // 6. Busca textual recebida da página
   const search = initialSearch;
 
-  // Obter geolocalização do navegador
-  useEffect(() => {
+  // Solicita geolocalização do navegador SOMENTE quando o usuário clica para explorar o mapa
+  const requestUserLocation = () => {
     if (typeof window !== "undefined" && "geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -53,10 +53,17 @@ export function EventsExplorer({
           // Mantém as coordenadas padrão em caso de recusa/erro
           console.warn("Geolocalização não autorizada ou indisponível:", error.message);
         },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 300000 }
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
       );
     }
-  }, []);
+  };
+
+  const handleToggleMap = (open: boolean) => {
+    setIsMapOpen(open);
+    if (open) {
+      requestUserLocation();
+    }
+  };
 
   // Enriquece eventos com coordenadas, distâncias e categorias
   const enrichedEvents = useMemo(() => {
@@ -132,7 +139,8 @@ export function EventsExplorer({
       {/* ----------------------------------------------------------------- */}
       <RetractableGpsMap
         isOpen={isMapOpen}
-        onToggle={setIsMapOpen}
+        onToggle={handleToggleMap}
+        onRequestLocation={requestUserLocation}
         events={enrichedEvents}
         filteredEvents={sortedAndFilteredEvents}
         userLocation={userLocation}

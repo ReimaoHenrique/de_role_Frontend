@@ -32,6 +32,7 @@ const LeafletMapView = dynamic(
 interface RetractableGpsMapProps {
   isOpen: boolean;
   onToggle: (open: boolean) => void;
+  onRequestLocation?: () => void;
   events: Event[];
   filteredEvents: Event[];
   userLocation: GeoCoordinates;
@@ -63,6 +64,7 @@ const DISTANCE_OPTIONS: { label: string; value: number | null }[] = [
 export function RetractableGpsMap({
   isOpen,
   onToggle,
+  onRequestLocation,
   filteredEvents,
   userLocation,
   selectedFilter,
@@ -231,6 +233,7 @@ export function RetractableGpsMap({
           userLocation={userLocation}
           selectedEventId={selectedEventId}
           onSelectEvent={onSelectEvent}
+          onRequestLocation={onRequestLocation}
         />
       </div>
     </div>

@@ -14,6 +14,7 @@ interface LeafletMapViewProps {
   userLocation: GeoCoordinates;
   selectedEventId: string | null;
   onSelectEvent: (eventId: string) => void;
+  onRequestLocation?: () => void;
 }
 
 function createRolezeiroIcon() {
@@ -80,9 +81,11 @@ function createEventIcon(event: Event, isSelected: boolean) {
 function MapController({
   userLocation,
   selectedEvent,
+  onRequestLocation,
 }: {
   userLocation: GeoCoordinates;
   selectedEvent: Event | null;
+  onRequestLocation?: () => void;
 }) {
   const map = useMap();
   const initialCenterSet = useRef(false);
@@ -124,6 +127,9 @@ function MapController({
       <button
         type="button"
         onClick={() => {
+          if (onRequestLocation) {
+            onRequestLocation();
+          }
           map.flyTo([userLocation.lat, userLocation.lng], 14, {
             animate: true,
             duration: 0.6,
@@ -144,6 +150,7 @@ export default function LeafletMapView({
   userLocation,
   selectedEventId,
   onSelectEvent,
+  onRequestLocation,
 }: LeafletMapViewProps) {
   const rolezeiroIcon = createRolezeiroIcon();
   const selectedEvent = events.find((e) => e.id === selectedEventId) ?? null;
@@ -165,6 +172,7 @@ export default function LeafletMapView({
         <MapController
           userLocation={userLocation}
           selectedEvent={selectedEvent}
+          onRequestLocation={onRequestLocation}
         />
 
         {/* Marcador especial ROLEZEIRO */}
